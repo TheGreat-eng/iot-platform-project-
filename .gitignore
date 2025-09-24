@@ -147,12 +147,13 @@ node_modules/
 *.sqlite3
 
 # Configuration files with sensitive data
+**/application.properties
 application-local.properties
 application-dev.properties
 application-prod.properties
 application-*.yml
 application-*.yaml
-!application.properties
+!application.properties.example
 
 # Security keys and certificates
 *.p12
