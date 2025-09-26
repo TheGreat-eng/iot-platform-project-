@@ -31,4 +31,15 @@ public class DeviceService {
     public List<Device> getDevicesForUser(User user) {
         return deviceRepository.findByUser(user);
     }
+
+    public Device getDeviceByIdAndUser(Long deviceId, User user) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found with id: " + deviceId));
+
+        // KIỂM TRA QUYỀN SỞ HỮU - Rất quan trọng
+        if (!device.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("Access Denied: You do not own this device.");
+        }
+        return device;
+    }
 }

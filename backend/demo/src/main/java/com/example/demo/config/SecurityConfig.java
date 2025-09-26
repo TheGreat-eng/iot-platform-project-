@@ -39,7 +39,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(request -> { // Cấu hình CORS chi tiết hơn
+                .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
                     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -51,10 +51,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/ws/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/device-data").permitAll() // <-- THÊM DÒNG NÀY
+                        .requestMatchers(HttpMethod.POST, "/api/device-data").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Thêm dòng này
                         .anyRequest().authenticated());
 
-        // Thêm filter JWT của chúng ta vào trước filter mặc định của Spring Security
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

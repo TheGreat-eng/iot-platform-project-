@@ -1,64 +1,56 @@
 import React, { useState } from 'react';
+import { Form, Input, Button, Card, Typography, Alert } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+
+const { Title } = Typography;
 
 const LoginPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault(); // Ngăn form submit và tải lại trang
+    const onFinish = async (values: any) => {
+        setLoading(true);
         setError('');
-
         try {
-            // 1. Gọi API login
             const response = await axios.post('http://localhost:8080/api/auth/login', {
-                username,
-                password,
+                username: values.username,
+                password: values.password,
             });
-
-            // 2. Kiểm tra xem có nhận được token không
             if (response.data && response.data.accessToken) {
-                // 3. Lưu token vào localStorage
                 localStorage.setItem('token', response.data.accessToken);
-
-                // 4. Chuyển hướng người dùng về trang chủ
                 navigate('/');
-                window.location.reload(); // Tải lại trang để các component khác cập nhật trạng thái đăng nhập
+                // Không cần reload, các component sẽ tự nhận biết sự thay đổi
             }
         } catch (err) {
             setError('Failed to login. Please check your credentials.');
-            console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div>
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label>Username:</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit">Login</button>
-            </form>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f0f2f5' }}>
+            <Card style={{ width: 400 }}>
+                <Title level={2} style={{ textAlign: 'center' }}>Login</Title>
+                {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 24 }} />}
+                <Form name="normal_login" onFinish={onFinish}>
+                    <Form.Item name="username" rules={[{ required: true, message: 'Please input your Email!' }, { type: 'email', message: 'The input is not valid E-mail!' }]}>
+                        <Input prefix={<UserOutlined />} placeholder="Email" />
+                    </Form.Item>
+                    <Form.Item name="password" rules={[{ required: true, message: 'Please input your Password!' }]}>
+                        <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+                    </Form.Item>
+                    <Form.Item>
+                        <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
+                            Log in
+                        </Button>
+                        Or <Link to="/register">register now!</Link>
+                    </Form.Item>
+                </Form>
+            </Card>
         </div>
     );
 };

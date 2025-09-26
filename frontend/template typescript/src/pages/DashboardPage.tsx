@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
-import { getMyDevices, createNewDevice } from '../api/deviceApi';
-import { Device } from '../types/device';
+import { List, Card, Form, Input, Button, Typography, Spin, Empty, message, Popover } from 'antd';
 import { Link } from 'react-router-dom';
+import { getMyDevices, createNewDevice } from '../api/deviceApi';
+import { Device } from '../types/data';
+import { PlusOutlined } from '@ant-design/icons';
+
+const { Title, Text } = Typography; // ✅ Thêm Text vào đây
 
 const DashboardPage = () => {
     const [devices, setDevices] = useState<Device[]>([]);
-    const [newDeviceName, setNewDeviceName] = useState('');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [form] = Form.useForm(); // Sử dụng hook của AntD Form
 
     useEffect(() => {
         const fetchDevices = async () => {
@@ -15,7 +18,7 @@ const DashboardPage = () => {
                 const userDevices = await getMyDevices();
                 setDevices(userDevices);
             } catch (err) {
-                setError('Failed to fetch devices.');
+                message.error('Failed to fetch devices.');
             } finally {
                 setLoading(false);
             }
@@ -23,51 +26,60 @@ const DashboardPage = () => {
         fetchDevices();
     }, []);
 
-    const handleCreateDevice = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newDeviceName.trim()) return;
+    const onFinish = async (values: { name: string }) => {
         try {
-            const newDevice = await createNewDevice(newDeviceName);
-            setDevices(prevDevices => [...prevDevices, newDevice]);
-            setNewDeviceName('');
+            const newDevice = await createNewDevice(values.name);
+            setDevices(prev => [...prev, newDevice]);
+            form.resetFields(); // Xóa text trong form sau khi tạo thành công
+            message.success(`Device "${values.name}" created successfully!`);
         } catch (err) {
-            setError('Failed to create device.');
+            message.error('Failed to create device.');
         }
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div style={{ color: 'red' }}>{error}</div>;
+    if (loading) return <Spin size="large" />;
 
     return (
         <div>
-            <h2>My Devices</h2>
-
-            {/* Form tạo device mới */}
-            <form onSubmit={handleCreateDevice}>
-                <input
-                    type="text"
-                    value={newDeviceName}
-                    onChange={(e) => setNewDeviceName(e.target.value)}
-                    placeholder="New device name (e.g., Living Room Sensor)"
-                />
-                <button type="submit">Create Device</button>
-            </form>
-
-            {/* Danh sách các device */}
-            <div style={{ marginTop: '2rem' }}>
-                {devices.length === 0 ? (
-                    <p>You have no devices yet. Create one!</p>
-                ) : (
-                    devices.map(device => (
-                        <div key={device.id} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
-                            <h3>{device.name}</h3>
-                            <p><strong>Device ID:</strong> <code>{device.deviceId}</code></p>
-                            <p><strong>Secret Key:</strong> <code>{device.secretKey}</code> (Use this in your simulator)</p>
-                            <Link to={`/devices/${device.id}`}>View Real-time Data</Link>
-                        </div>
-                    ))
-                )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <Title level={2} style={{ margin: 0 }}>My Devices</Title>
+                {/* Form tạo device mới đặt trong Popover */}
+                <Popover
+                    content={
+                        <Form form={form} onFinish={onFinish}>
+                            <Form.Item name="name" rules={[{ required: true, message: 'Please input a device name!' }]}>
+                                <Input placeholder="e.g., Living Room Sensor" />
+                            </Form.Item>
+                            <Button type="primary" htmlType="submit">Create</Button>
+                        </Form>
+                    }
+                    title="Create a New Device"
+                    trigger="click"
+                >
+                    <Button type="primary" icon={<PlusOutlined />}>Add Device</Button>
+                </Popover>
             </div>
+
+            <List
+                grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 4 }}
+                dataSource={devices}
+                locale={{ emptyText: <Empty description="You have no devices yet. Create one!" /> }}
+                renderItem={device => (
+                    <List.Item>
+                        <Card
+                            title={device.name}
+                            hoverable
+                            actions={[
+                                <Link to={`/devices/${device.id}`}>View Data</Link>,
+                            ]}
+                        >
+                            <Text strong>Device ID:</Text> <Text copyable>{device.deviceId}</Text>
+                            <br />
+                            <Text strong>Secret Key:</Text> <Text copyable>{device.secretKey}</Text>
+                        </Card>
+                    </List.Item>
+                )}
+            />
         </div>
     );
 };

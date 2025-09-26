@@ -16,3 +16,8 @@ export const getDeviceDataHistory = async (deviceId: number): Promise<SensorData
     const response = await api.get<SensorData[]>(`/devices/${deviceId}/data`);
     return response.data;
 }
+
+export const getDeviceById = async (deviceId: number): Promise<Device> => {
+    const response = await api.get<Device>(`/devices/${deviceId}`);
+    return response.data;
+};

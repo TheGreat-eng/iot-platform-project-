@@ -10,8 +10,8 @@ import java.util.Random;
 
 public class Main {
     private static final String API_URL = "http://localhost:8080/api/device-data";
-    private static final String DEVICE_ID = "dev_85ed0a16e4984f989b39f6e32a022332"; // <-- CẬP NHẬT
-    private static final String SECRET_KEY = "sk_6f0bd0666f07432dacb2289dd38e2337"; // <-- CẬP NHẬT
+    private static final String DEVICE_ID = "dev_16d3187bad5d42e6bdf423b88ba86567"; // <-- CẬP NHẬT
+    private static final String SECRET_KEY = "sk_9906d59e282d4773b3a431bdfb46045d"; // <-- CẬP NHẬT
     private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new Gson();
     private static final Random random = new Random();
@@ -22,7 +22,7 @@ public class Main {
         while (true) {
             try {
                 // 1. Tạo dữ liệu giả
-                double temperature = 20 + (15 * random.nextDouble()); // Nhiệt độ từ 20-35
+                double temperature = 31 + (4 * random.nextDouble()); // Giá trị luôn > 30 (từ 31-35)
 
                 // 2. Tạo payload JSON
                 Map<String, Object> payload = new HashMap<>();
@@ -48,8 +48,8 @@ public class Main {
                     }
                 }
 
-                // 5. Chờ 5 giây cho lần gửi tiếp theo
-                Thread.sleep(5000);
+                // 5. Chờ 20 giây cho lần gửi tiếp theo
+                Thread.sleep(20000);
 
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
