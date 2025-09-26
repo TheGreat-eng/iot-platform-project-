@@ -1,22 +1,45 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { SensorData } from './types/data';
-// Import vào
+import SockJS from 'sockjs-client';
+import Stomp from 'stompjs';
 
-// Tạm thời dùng any, sau này sẽ định nghĩa interface chặt chẽ
 function App() {
-  const [data, setData] = useState<SensorData[]>([]); // Sử dụng kiểu dữ liệu
+  const [data, setData] = useState<SensorData[]>([]);
 
+  // Fetch dữ liệu ban đầu khi component được tải
   useEffect(() => {
-    // Fetch data from the backend
     fetch('http://localhost:8080/api/data')
       .then(response => response.json())
-      .then(result => setData(result))
-      .catch(error => console.error('Error fetching data:', error));
-  }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy 1 lần
+      .then((result: SensorData[]) => setData(result.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())))
+      .catch(error => console.error('Error fetching initial data:', error));
+  }, []);
+
+  // Thiết lập và quản lý kết nối WebSocket
+  useEffect(() => {
+    const socket = new SockJS('http://localhost:8080/ws');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+      console.log('Connected to WebSocket');
+      stompClient.subscribe('/topic/data', message => {
+        const newRecord: SensorData = JSON.parse(message.body);
+        console.log('Received new data:', newRecord);
+        // Cập nhật state, thêm dữ liệu mới vào đầu danh sách
+        setData(prevData => [newRecord, ...prevData]);
+      });
+    });
+
+    // Cleanup function: Ngắt kết nối khi component bị unmount
+    return () => {
+      if (stompClient?.connected) {
+        stompClient.disconnect();
+      }
+    };
+  }, []); // Mảng rỗng để đảm bảo effect này chỉ chạy 1 lần
 
   return (
-    <div>
-      <h1>IoT Data Stream</h1>
+    <div className="App">
+      <h1>IoT Data Stream (Real-time)</h1>
       <ul>
         {data.map(item => (
           <li key={item.id}>

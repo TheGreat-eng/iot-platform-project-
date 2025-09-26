@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.entity.SensorData;
 import com.example.demo.repository.SensorDataRepository;
+import com.example.demo.service.WebSocketService;
 
 @RestController
 @RequestMapping("/api/data")
@@ -23,11 +24,18 @@ public class SensorDataController {
     @Autowired
     private SensorDataRepository sensorDataRepository;
 
+    @Autowired
+    private WebSocketService webSocketService; // <-- TIÊM SERVICE VÀO
+
     // Endpoint để NHẬN dữ liệu từ thiết bị
     @PostMapping
     public ResponseEntity<SensorData> receiveData(@RequestBody SensorData data) {
         data.setTimestamp(Instant.now());
         SensorData savedData = sensorDataRepository.save(data);
+
+        // GỌI WEBSOCKET SERVICE ĐỂ PHÁT DỮ LIỆU MỚI
+        webSocketService.sendDataUpdate(savedData);
+
         return ResponseEntity.ok(savedData);
     }
 
