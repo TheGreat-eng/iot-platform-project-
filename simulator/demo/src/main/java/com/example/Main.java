@@ -9,8 +9,9 @@ import java.util.Map;
 import java.util.Random;
 
 public class Main {
-    private static final String API_URL = "http://localhost:8080/api/data";
-    private static final String DEVICE_ID = "TEMPERATURE_SENSOR_01";
+    private static final String API_URL = "http://localhost:8080/api/device-data";
+    private static final String DEVICE_ID = "dev_85ed0a16e4984f989b39f6e32a022332"; // <-- CẬP NHẬT
+    private static final String SECRET_KEY = "sk_6f0bd0666f07432dacb2289dd38e2337"; // <-- CẬP NHẬT
     private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new Gson();
     private static final Random random = new Random();
@@ -26,6 +27,7 @@ public class Main {
                 // 2. Tạo payload JSON
                 Map<String, Object> payload = new HashMap<>();
                 payload.put("deviceId", DEVICE_ID);
+                payload.put("secretKey", SECRET_KEY); // <-- THÊM DÒNG NÀY
                 payload.put("value", Math.round(temperature * 10.0) / 10.0); // Làm tròn 1 chữ số thập phân
                 String jsonPayload = gson.toJson(payload);
 
